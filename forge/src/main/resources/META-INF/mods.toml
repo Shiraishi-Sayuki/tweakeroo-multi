@@ -1,0 +1,36 @@
+modLoader = "javafml"
+loaderVersion = "[46,)"
+license = "LGPLv3"
+
+[[mods]]
+modId = "tweakeroo"
+version = "${version}"
+displayName = "Tweakeroo"
+displayURL = "https://github.com/maruohon/tweakeroo"
+logoFile = "assets/tweakeroo/icon.png"
+credits = "masa"
+authors = "masa, Shiraishi-Sayuki (multiloader port)"
+description = '''
+Adds a bunch of configurable client-side tweaks.
+'''
+
+[[dependencies.tweakeroo]]
+modId = "forge"
+mandatory = true
+versionRange = "[46,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.tweakeroo]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20,1.21)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.tweakeroo]]
+modId = "malilib"
+mandatory = true
+versionRange = "[0.16,)"
+ordering = "AFTER"
+side = "CLIENT"
