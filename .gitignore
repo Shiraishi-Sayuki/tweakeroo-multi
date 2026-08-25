@@ -12,3 +12,5 @@ run
 libs/
 .idea/
 run/
+libs/
+**/libs/
