@@ -1,12 +1,10 @@
 package fi.dy.masa.tweakeroo.mixin.block;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-
 import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -20,32 +18,34 @@ import fi.dy.masa.tweakeroo.util.MiscUtils;
 @Mixin(value = HopperBlockEntity.class, priority = 999)
 public class MixinHopperBlockEntity
 {
-    @WrapOperation(
+    @Redirect(
             method = "isFull",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getMaxCount()I")
     )
-    private int modifyShulkerMaxCount(ItemStack instance, Operation<Integer> original)
+    private int modifyShulkerMaxCount(ItemStack instance)
     {
-        if (Configs.Fixes.STACKABLE_SHULKERS_IN_HOPPER_FIX.getBooleanValue())
+        if (Configs.Fixes.STACKABLE_SHULKERS_IN_HOPPER_FIX.getBooleanValue() &&
+            MiscUtils.isShulkerBox(instance))
         {
-            return MiscUtils.isShulkerBox(instance) ? instance.getCount() : original.call(instance);
+            return instance.getCount();
         }
 
-        return original.call(instance);
+        return instance.getMaxCount();
     }
 
-    @WrapOperation(
+    @Redirect(
             method = "isInventoryFull",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getMaxCount()I")
     )
-    private static int modifyShulkerMaxCountStatic(ItemStack instance, Operation<Integer> original)
+    private static int modifyShulkerMaxCountStatic(ItemStack instance)
     {
-        if (Configs.Fixes.STACKABLE_SHULKERS_IN_HOPPER_FIX.getBooleanValue())
+        if (Configs.Fixes.STACKABLE_SHULKERS_IN_HOPPER_FIX.getBooleanValue() &&
+            MiscUtils.isShulkerBox(instance))
         {
-            return MiscUtils.isShulkerBox(instance) ? 1 : original.call(instance);
+            return 1;
         }
 
-        return original.call(instance);
+        return instance.getMaxCount();
     }
 
     @Inject(

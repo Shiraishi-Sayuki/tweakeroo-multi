@@ -90,12 +90,31 @@ public class RenderTweaks
 
     public static DynamicRegistryManager.Immutable getDynamicRegistryManager()
     {
+        // ワールドロード前にresetWorldが呼ばれた場合のフォールバック
+        if (dynamicRegistryManager == null && MinecraftClient.getInstance().getNetworkHandler() != null)
+        {
+            var rm = MinecraftClient.getInstance().getNetworkHandler().getRegistryManager();
+
+            if (rm instanceof DynamicRegistryManager.Immutable imm)
+            {
+                dynamicRegistryManager = imm;
+            }
+        }
+
         return dynamicRegistryManager;
     }
 
     public static void resetWorld(int loadDistance)
     {
-        fakeWorld = new FakeWorld(dynamicRegistryManager, loadDistance);
+        var rm = getDynamicRegistryManager();
+
+        if (rm == null)
+        {
+            // レジストリがまだ取れない場合は何もしない(次回リトライ)
+            return;
+        }
+
+        fakeWorld = new FakeWorld(rm, loadDistance);
     }
 
     public static FakeWorld getFakeWorld()

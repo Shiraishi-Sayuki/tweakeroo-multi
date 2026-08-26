@@ -9,7 +9,7 @@ displayName = "Tweakeroo"
 displayURL = "https://github.com/maruohon/tweakeroo"
 logoFile = "assets/tweakeroo/icon.png"
 credits = "masa"
-authors = "masa, Shiraishi-Sayuki (multiloader port)"
+authors = "masa, Shiraishi Sayuki (multiloader port)"
 description = '''
 Adds a bunch of configurable client-side tweaks.
 '''

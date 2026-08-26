@@ -3,7 +3,6 @@ package fi.dy.masa.tweakeroo.mixin.freecam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,8 +31,9 @@ public abstract class MixinInGameHud_freeCam
         }
     }
 
+    // 1.20.1のrenderHotbarは(float, DrawContext)
     @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
-    public void tweakeroo_overrideHotbarRendering(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci)
+    public void tweakeroo_overrideHotbarRendering(float tickDelta, DrawContext context, CallbackInfo ci)
 	{
 		// This turns off rendering of the hotbar
         if (FeatureToggle.TWEAK_FREE_CAMERA.getBooleanValue() &&

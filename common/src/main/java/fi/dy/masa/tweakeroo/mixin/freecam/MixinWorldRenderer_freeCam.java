@@ -5,6 +5,7 @@ import org.objectweb.asm.Opcodes;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,8 +30,8 @@ public abstract class MixinWorldRenderer_freeCam
 
     @Inject(method = "render", at = @At(value = "INVOKE_STRING",
                                         target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=terrain_setup"))
-    private void preSetupTerrain(RenderTickCounter tickCounter, boolean renderBlockOutline,
-                                 Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci)
+    private void preSetupTerrain(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline,
+                                 Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f projectionMatrix, CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_FREE_CAMERA.getBooleanValue())
         {

@@ -49,7 +49,27 @@ public class FakeWorld extends World
 {
     private static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, new Identifier(Reference.MOD_ID, "selective_world"));
     private static final ClientWorld.Properties LEVEL_INFO = new ClientWorld.Properties(Difficulty.PEACEFUL, false, true);
-    private static final RegistryEntry<DimensionType> DIMENSION_TYPE = RenderTweaks.getDynamicRegistryManager().createRegistryLookup().getOrThrow(RegistryKeys.DIMENSION_TYPE).getOrThrow(DimensionTypes.OVERWORLD);
+    // 1.20.1 - 遅延初期化(静的初期化でregistryが無いとクラス自体が死ぬ)
+    private static RegistryEntry<DimensionType> dimensionType;
+
+    private static RegistryEntry<DimensionType> getDimensionType()
+    {
+        if (dimensionType == null)
+        {
+            DynamicRegistryManager rm = RenderTweaks.getDynamicRegistryManager();
+
+            if (rm == null)
+            {
+                return null;
+            }
+
+            // 1.20.1のDynamicRegistryManager.getはRegistryを直接返す(entryOfでRegistryEntry化)
+            dimensionType = rm.get(RegistryKeys.DIMENSION_TYPE)
+                              .entryOf(DimensionTypes.OVERWORLD);
+        }
+
+        return dimensionType;
+    }
 
     // NeoForge側のWorldには抽象メソッドがあるので空実装を足す、Fabric側ではただの余分なメソッドになるだけ
     public float getDayTimePerTick()
@@ -93,7 +113,7 @@ public class FakeWorld extends World
 
     public FakeWorld(DynamicRegistryManager registryManager, int loadDistance)
     {
-        this(registryManager, LEVEL_INFO, DIMENSION_TYPE, MinecraftClient.getInstance()::getProfiler, loadDistance);
+        this(registryManager, LEVEL_INFO, getDimensionType(), MinecraftClient.getInstance()::getProfiler, loadDistance);
     }
 
     public Profiler getProfiler()

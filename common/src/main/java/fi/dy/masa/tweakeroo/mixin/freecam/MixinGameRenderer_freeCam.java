@@ -1,7 +1,5 @@
 package fi.dy.masa.tweakeroo.mixin.freecam;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
@@ -22,7 +20,7 @@ public abstract class MixinGameRenderer_freeCam
 {
     @Shadow @Final MinecraftClient client;
 
-    @ModifyExpressionValue(method = "getFov", at = @At(value = "CONSTANT", args = "doubleValue=70.0"))
+    @org.spongepowered.asm.mixin.injection.ModifyConstant(method = "getFov", constant = @org.spongepowered.asm.mixin.injection.Constant(doubleValue = 70.0))
     private double tweakeroo_applyFreeCameraFov(double original)
     {
         if (FeatureToggle.TWEAK_FREE_CAMERA.getBooleanValue())

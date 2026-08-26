@@ -9,7 +9,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HangingSignEditScreen;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,8 +32,9 @@ public abstract class MixinSignBlockEntity extends BlockEntity implements ISignT
         super(blockEntityType, blockPos, blockState);
     }
 
+    // 1.20.1のreadNbtは引数がNbtCompoundのみ(RegistryWrapperは1.20.5+)
     @Inject(method = "readNbt", at = @At("RETURN"))
-    private void restoreCopiedText(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup, CallbackInfo ci)
+    private void restoreCopiedText(NbtCompound nbt, CallbackInfo ci)
     {
         // Restore the copied/pasted text after the TileEntity sync overrides it with empty lines
         if (FeatureToggle.TWEAK_SIGN_COPY.getBooleanValue() && this.getWorld() != null && this.getWorld().isClient)
