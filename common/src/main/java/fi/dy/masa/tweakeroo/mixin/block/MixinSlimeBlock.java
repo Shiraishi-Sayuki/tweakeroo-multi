@@ -3,7 +3,7 @@ package fi.dy.masa.tweakeroo.mixin.block;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlimeBlock;
-import net.minecraft.block.TranslucentBlock;
+import net.minecraft.block.TransparentBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import fi.dy.masa.tweakeroo.config.Configs;
 
 @Mixin(SlimeBlock.class)
-public abstract class MixinSlimeBlock extends TranslucentBlock
+public abstract class MixinSlimeBlock extends TransparentBlock
 {
     public MixinSlimeBlock(AbstractBlock.Settings settings)
     {

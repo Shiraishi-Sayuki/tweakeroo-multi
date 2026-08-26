@@ -5,7 +5,8 @@ import java.util.List;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.client.item.TooltipContext;
+import net.minecraft.world.BlockView;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,9 +20,9 @@ public abstract class MixinShulkerBoxBlock
 {
     @Inject(method = "appendTooltip", at = @At("HEAD"), cancellable = true)
     private void removeVanillaTooltip(ItemStack stack,
-                                      Item.TooltipContext context,
+                                      BlockView view,
                                       List<Text> tooltip,
-                                      TooltipType options,
+                                      TooltipContext options,
                                       CallbackInfo ci)
     {
         if (Configs.Disable.DISABLE_SHULKER_BOX_TOOLTIP.getBooleanValue())

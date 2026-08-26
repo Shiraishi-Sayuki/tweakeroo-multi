@@ -1,30 +1,31 @@
 package fi.dy.masa.tweakeroo.network;
 
+import java.util.List;
+
 import io.netty.buffer.Unpooled;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.random.Random;
 
-import fi.dy.masa.malilib.network.IClientPayloadData;
-import fi.dy.masa.malilib.network.IPluginClientPlayHandler;
+import fi.dy.masa.malilib.network.ClientPacketChannelHandler;
+import fi.dy.masa.malilib.network.IPluginChannelHandler;
 import fi.dy.masa.malilib.network.PacketSplitter;
+import com.google.common.collect.ImmutableList;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import fi.dy.masa.tweakeroo.Tweakeroo;
 import fi.dy.masa.tweakeroo.data.EntityDataManager;
 
-public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IPluginClientPlayHandler<T>
+public class ServuxTweaksHandler implements IPluginChannelHandler
 {
-    private static final ServuxTweaksHandler<ServuxTweaksPacket.Payload> INSTANCE = new ServuxTweaksHandler<>() {
+    private static final ServuxTweaksHandler INSTANCE = new ServuxTweaksHandler() {
     };
-    public static ServuxTweaksHandler<ServuxTweaksPacket.Payload> getInstance() { return INSTANCE; }
+    public static ServuxTweaksHandler getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = Identifier.of("servux", "tweaks");
+    public static final Identifier CHANNEL_ID = new Identifier("servux", "tweaks");
 
     private boolean servuxRegistered;
     private boolean payloadRegistered = false;
@@ -32,10 +33,8 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
     private static final int MAX_FAILURES = 4;
     private long readingSessionKey = -1;
 
-    @Override
     public Identifier getPayloadChannel() { return CHANNEL_ID; }
 
-    @Override
     public boolean isPlayRegistered(Identifier channel)
     {
         if (channel.equals(CHANNEL_ID))
@@ -46,7 +45,6 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
         return false;
     }
 
-    @Override
     public void setPlayRegistered(Identifier channel)
     {
         if (channel.equals(CHANNEL_ID))
@@ -55,10 +53,8 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
         }
     }
 
-    @Override
-    public <P extends IClientPayloadData> void decodeClientData(Identifier channel, P data)
+    public void decodeClientData(Identifier channel, ServuxTweaksPacket packet)
     {
-        ServuxTweaksPacket packet = (ServuxTweaksPacket) data;
 
         if (!channel.equals(CHANNEL_ID))
         {
@@ -77,32 +73,20 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
             case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE -> EntityDataManager.getInstance().handleEntityData(packet.getEntityId(), packet.getCompound());
             case PACKET_S2C_NBT_RESPONSE_DATA ->
             {
-                if (this.readingSessionKey == -1)
+                // 1.20.1では再組立はmalilibのPacketSplitterが済ませている
+                try
                 {
-                    this.readingSessionKey = Random.create(Util.getMeasuringTimeMs()).nextLong();
+                    EntityDataManager.getInstance().handleBulkEntityData(packet.getTransactionId(), packet.getCompound());
                 }
-
-                //Tweakeroo.printDebug("ServuxTweaksHandler#decodeClientData(): received Tweaks Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), this.readingSessionKey);
-                PacketByteBuf fullPacket = PacketSplitter.receive(this, this.readingSessionKey, packet.getBuffer());
-
-                if (fullPacket != null)
+                catch (Exception e)
                 {
-                    try
-                    {
-                        this.readingSessionKey = -1;
-                        EntityDataManager.getInstance().handleBulkEntityData(fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
-                    }
-                    catch (Exception e)
-                    {
-                        Tweakeroo.LOGGER.error("ServuxTweaksHandler#decodeClientData(): Tweaks Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
-                    }
+                    Tweakeroo.LOGGER.error("ServuxTweaksHandler#decodeClientData(): Tweaks Data: error reading buffer [{}]", e.getLocalizedMessage());
                 }
             }
             default -> Tweakeroo.LOGGER.warn("ServuxTweaksHandler#decodeClientData(): received unhandled packetType {} of size {} bytes.", packet.getPacketType(), packet.getTotalSize());
         }
     }
 
-    @Override
     public void reset(Identifier channel)
     {
         if (channel.equals(CHANNEL_ID) && this.servuxRegistered)
@@ -121,47 +105,111 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
         }
     }
 
+    // ---- IPluginChannelHandler (malilib 1.20.1) ----
+
     @Override
-    public void receivePlayPayload(T payload, Object ctx)
+    public List<Identifier> getChannels()
     {
-        if (payload.getId().id().equals(CHANNEL_ID))
-        {
-            ServuxTweaksHandler.INSTANCE.decodeClientData(CHANNEL_ID, ((ServuxTweaksPacket.Payload) payload).data());
-        }
+        return ImmutableList.of(CHANNEL_ID);
     }
 
     @Override
-    public void encodeWithSplitter(PacketByteBuf buffer, ClientPlayNetworkHandler handler)
+    public boolean registerToServer()
     {
-        // Send each PacketSplitter buffer slice
-        ServuxTweaksHandler.INSTANCE.sendPlayPayload(new ServuxTweaksPacket.Payload(ServuxTweaksPacket.ResponseS2CData(buffer)));
+        return true;
     }
 
     @Override
-    public <P extends IClientPayloadData> void encodeClientData(P data)
+    public boolean usePacketSplitter()
     {
-        ServuxTweaksPacket packet = (ServuxTweaksPacket) data;
+        return true;
+    }
 
-        if (packet.getType().equals(ServuxTweaksPacket.Type.PACKET_C2S_NBT_RESPONSE_START))
+    @Override
+    public void onPacketReceived(PacketByteBuf buf)
+    {
+        try
         {
-            PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
-            buffer.writeVarInt(packet.getTransactionId());
-            buffer.writeNbt(packet.getCompound());
-            PacketSplitter.send(this, buffer, MinecraftClient.getInstance().getNetworkHandler());
-        }
-        else if (!ServuxTweaksHandler.INSTANCE.sendPlayPayload(new ServuxTweaksPacket.Payload(packet)))
-        {
-            if (this.failures > MAX_FAILURES)
+            ServuxTweaksPacket packet = ServuxTweaksPacket.fromPacket(buf);
+
+            if (packet != null)
             {
-                Tweakeroo.debugLog("ServuxTweaksHandler#encodeClientData(): encountered [{}] sendPayload failures, cancelling any Servux join attempt(s)", MAX_FAILURES);
-                this.servuxRegistered = false;
-                ServuxTweaksHandler.INSTANCE.unregisterPlayReceiver();
-                EntityDataManager.getInstance().onPacketFailure();
+                this.decodeClientData(CHANNEL_ID, packet);
             }
-            else
+            else if (buf.isReadable())
             {
-                this.failures++;
+                // フレーム無しのバルクNBT(varint txId + NBT)の場合
+                int txId = buf.readVarInt();
+                NbtCompound nbt = buf.readNbt();
+                EntityDataManager.getInstance().handleBulkEntityData(txId, nbt);
             }
         }
+        catch (Exception e)
+        {
+            Tweakeroo.LOGGER.error("ServuxTweaksHandler#onPacketReceived: error decoding packet [{}]", e.getLocalizedMessage());
+        }
+    }
+
+    // ---- registration / lifecycle kept for EntityDataManager ----
+
+    public void registerPlayReceiver()
+    {
+        if (this.payloadRegistered == false)
+        {
+            ClientPacketChannelHandler.getInstance().registerClientChannelHandler(this);
+            this.payloadRegistered = true;
+        }
+    }
+
+    public void unregisterPlayReceiver()
+    {
+        if (this.payloadRegistered)
+        {
+            ClientPacketChannelHandler.getInstance().unregisterClientChannelHandler(this);
+            this.payloadRegistered = false;
+        }
+    }
+
+    public void sendPlayRequest(ServuxTweaksPacket packet)
+    {
+        ClientPlayNetworkHandler handler = MinecraftClient.getInstance().getNetworkHandler();
+
+        if (handler == null)
+        {
+            this.onSendFailure();
+            return;
+        }
+
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+        packet.toPacket(buf);
+
+        if (this.usePacketSplitter())
+        {
+            PacketSplitter.send(handler, CHANNEL_ID, buf);
+        }
+        else
+        {
+            handler.sendPacket(new CustomPayloadC2SPacket(CHANNEL_ID, buf));
+        }
+    }
+
+    private void onSendFailure()
+    {
+        if (this.failures > MAX_FAILURES)
+        {
+            Tweakeroo.debugLog("ServuxTweaksHandler#onSendFailure(): encountered [{}] send failures, cancelling any Servux join attempt(s)", MAX_FAILURES);
+            this.servuxRegistered = false;
+            this.unregisterPlayReceiver();
+            EntityDataManager.getInstance().onPacketFailure();
+        }
+        else
+        {
+            this.failures++;
+        }
+    }
+
+    public void encodeClientData(ServuxTweaksPacket packet)
+    {
+        this.sendPlayRequest(packet);
     }
 }

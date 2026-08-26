@@ -50,7 +50,7 @@ public class CachedTagManager
 		list.add(Registries.BLOCK.getId(Blocks.LARGE_FERN).toString());
 		list.add(Registries.BLOCK.getId(Blocks.NETHER_SPROUTS).toString());
 //		list.add(Registries.BLOCK.getId(Blocks.PALE_HANGING_MOSS).toString());
-		list.add(Registries.BLOCK.getId(Blocks.SHORT_GRASS).toString());
+		list.add(Registries.BLOCK.getId(Blocks.GRASS).toString());
 //		list.add(Registries.BLOCK.getId(Blocks.SHORT_DRY_GRASS).toString());
 		list.add(Registries.BLOCK.getId(Blocks.SEAGRASS).toString());
 		list.add(Registries.BLOCK.getId(Blocks.TALL_GRASS).toString());

@@ -1,6 +1,6 @@
 package fi.dy.masa.tweakeroo.mixin.block;
 
-import net.minecraft.block.spawner.MobSpawnerLogic;
+import net.minecraft.world.MobSpawnerLogic;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;

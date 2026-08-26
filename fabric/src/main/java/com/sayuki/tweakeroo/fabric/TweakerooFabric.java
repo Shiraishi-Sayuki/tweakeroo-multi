@@ -1,28 +1,21 @@
 package com.sayuki.tweakeroo.fabric;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import fi.dy.masa.malilib.network.ClientPacketChannelHandler;
 import fi.dy.masa.tweakeroo.Tweakeroo;
 import fi.dy.masa.tweakeroo.network.ServuxTweaksHandler;
-import fi.dy.masa.tweakeroo.network.ServuxTweaksPacket;
+import net.fabricmc.api.ModInitializer;
 
-// Fabricエントリポイント - fabric.mod.jsonのmainから呼ばれる、共通初期化の後にServux受信を登録する
+// Fabricエントリポイント - fabric.mod.jsonのmainから呼ばれる、共通初期化後にチャンネル登録する
 // MOD自体はクライアント限定(environment: client)なのでModInitializerで問題ない
 public class TweakerooFabric implements ModInitializer {
-    // 受信登録 - 共通初期化でペイロード種類が登録されてからレシーバーを足す
-    private static void registerReceivers() {
-        ClientPlayNetworking.registerGlobalReceiver(ServuxTweaksPacket.Payload.ID, (payload, context) -> {
-            ServuxTweaksHandler.getInstance().receivePlayPayload(payload, null);
-        });
-    }
-
     @Override
     public void onInitialize() {
+        // 共通初期化 - masaのコードを呼ぶ
         Tweakeroo.onInitialize();
-        try {
-            registerReceivers();
-        } catch (Throwable t) {
-            Tweakeroo.LOGGER.warn("registerReceives failed - {}", t.getMessage());
-        }
+
+        // 1.20.1 - malilibのチャンネルハンドラ経由で登録(旧PayloadAPIは削除済み)
+        ClientPacketChannelHandler.getInstance().registerClientChannelHandler(
+                ServuxTweaksHandler.getInstance()
+        );
     }
 }

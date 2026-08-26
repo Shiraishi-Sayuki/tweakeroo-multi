@@ -35,20 +35,20 @@ public class FcCommand implements IClientCommandListener
 	public boolean execute(List<String> args, MinecraftClient mc)
 	{
 		List<String> list = new ArrayList<>(args);      // Copy it first
-		list.removeFirst();
+		list.remove(0);
 
 		if (!list.isEmpty())
 		{
-			Sub sub = Sub.fromString(list.getFirst());
+			Sub sub = Sub.fromString(list.get(0));
 
 			if (sub != null)
 			{
-				list.removeFirst();
+				list.remove(0);
 
 				if (sub.needsArgs() && list.isEmpty())
 				{
 					mc.inGameHud.getChatHud()
-								.addMessage(StringUtils.translateAsText(PREFIX + "_not_enough_args_given"));
+								.addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX + "_not_enough_args_given")));
 					return true;
 				}
 
@@ -85,7 +85,7 @@ public class FcCommand implements IClientCommandListener
 
 	private boolean executeInvalid(MinecraftClient mc)
 	{
-		mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid_operation"));
+		mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid_operation")));
 		return true;
 	}
 
@@ -105,7 +105,7 @@ public class FcCommand implements IClientCommandListener
 			}
 			else
 			{
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_already_in_use"));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_already_in_use")));
 			}
 		}
 
@@ -120,7 +120,7 @@ public class FcCommand implements IClientCommandListener
 
 			try
 			{
-				id = Integer.parseInt(args.getFirst());
+				id = Integer.parseInt(args.get(0));
 
 				if (CameraPresetManager.getInstance().hasId(id))
 				{
@@ -138,13 +138,13 @@ public class FcCommand implements IClientCommandListener
 				}
 				else
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_not_found", String.format("%02d", id)));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_not_found", String.format("%02d", id))));
 				}
 			}
 			catch (Exception err)
 			{
 				Tweakeroo.LOGGER.error("FcCommand#set(): Exception; {}", err.getLocalizedMessage());
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid", args.getFirst()));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid", args.get(0))));
 			}
 		}
 
@@ -159,7 +159,7 @@ public class FcCommand implements IClientCommandListener
 		{
 			if (!args.isEmpty())
 			{
-				id = Integer.parseInt(args.getFirst());
+				id = Integer.parseInt(args.get(0));
 
 				if (CameraPresetManager.getInstance().hasId(id))
 				{
@@ -172,7 +172,7 @@ public class FcCommand implements IClientCommandListener
 				}
 				else
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX + "_not_found", String.format("%02d", id)));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX + "_not_found", String.format("%02d", id))));
 				}
 			}
 			else
@@ -191,7 +191,7 @@ public class FcCommand implements IClientCommandListener
 		catch (Exception err)
 		{
 			Tweakeroo.LOGGER.error("FcCommand#del(): Exception; {}", err.getLocalizedMessage());
-			mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid", args.getFirst()));
+			mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid", args.get(0))));
 		}
 
 		return true;
@@ -221,13 +221,13 @@ public class FcCommand implements IClientCommandListener
 
 			if (list.isEmpty())
 			{
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_list_empty"));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_list_empty")));
 			}
 			else
 			{
 				for (CameraPreset entry : list)
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_list", entry.toShortString()));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_list", entry.toShortString())));
 				}
 			}
 		}
@@ -241,11 +241,11 @@ public class FcCommand implements IClientCommandListener
 
 		try
 		{
-			id = Integer.parseInt(args.getFirst());
+			id = Integer.parseInt(args.get(0));
 
 			if (CameraPresetManager.getInstance().hasId(id))
 			{
-				args.removeFirst();
+				args.remove(0);
 
 				if (!args.isEmpty())
 				{
@@ -267,18 +267,18 @@ public class FcCommand implements IClientCommandListener
 				}
 				else
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX + "_not_enough_args_given"));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX + "_not_enough_args_given")));
 				}
 			}
 			else
 			{
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX + "_not_found", String.format("%02d", id)));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX + "_not_found", String.format("%02d", id))));
 			}
 		}
 		catch (Exception err)
 		{
 			Tweakeroo.LOGGER.error("FcCommand#rename(): Exception; {}", err.getLocalizedMessage());
-			mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid", args.getFirst()));
+			mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid", args.get(0))));
 		}
 
 		return true;
@@ -290,7 +290,7 @@ public class FcCommand implements IClientCommandListener
 
 		try
 		{
-			id = Integer.parseInt(args.getFirst());
+			id = Integer.parseInt(args.get(0));
 
 			if (CameraPresetManager.getInstance().hasId(id))
 			{
@@ -306,24 +306,24 @@ public class FcCommand implements IClientCommandListener
 						}
 						else
 						{
-							mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX + "_matches_camera", String.format("%02d", preset.getId())));
+							mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX + "_matches_camera", String.format("%02d", preset.getId()))));
 						}
 					}
 					else
 					{
-						mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX + "_wrong_dimension", String.format("%02d", preset.getId()), preset.getName()));
+						mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX + "_wrong_dimension", String.format("%02d", preset.getId()), preset.getName())));
 					}
 				}
 			}
 			else
 			{
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_not_found", String.format("%02d", id)));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_not_found", String.format("%02d", id))));
 			}
 		}
 		catch (Exception err)
 		{
 			Tweakeroo.LOGGER.error("FcCommand#recall(): Exception; {}", err.getLocalizedMessage());
-			mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid", args.getFirst()));
+			mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid", args.get(0))));
 		}
 
 		return true;
@@ -331,7 +331,7 @@ public class FcCommand implements IClientCommandListener
 
 	private boolean executeCycle(List<String> args, MinecraftClient mc)
 	{
-//		mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_not_implemented", args.getFirst()));
+//		mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_not_implemented", args.get(0))));
 
 		if (mc.world != null)
 		{
@@ -348,7 +348,7 @@ public class FcCommand implements IClientCommandListener
 			{
 				try
 				{
-					id = Integer.parseInt(args.getFirst());
+					id = Integer.parseInt(args.get(0));
 
 					if (CameraPresetManager.getInstance().hasId(id))
 					{
@@ -359,7 +359,7 @@ public class FcCommand implements IClientCommandListener
 				catch (Exception err)
 				{
 					Tweakeroo.LOGGER.error("FcCommand#cycle(): Exception; {}", err.getLocalizedMessage());
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid", args.getFirst()));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid", args.get(0))));
 					exception = true;
 				}
 			}
@@ -372,12 +372,12 @@ public class FcCommand implements IClientCommandListener
 				}
 				else
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_matches_camera", String.format("%02d", preset.getId())));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_matches_camera", String.format("%02d", preset.getId()))));
 				}
 			}
 			else if (!exception)
 			{
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_cycle_not_found"));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_cycle_not_found")));
 			}
 		}
 
@@ -390,38 +390,38 @@ public class FcCommand implements IClientCommandListener
 
 		if (!args.isEmpty())
 		{
-			Sub sub = Sub.fromString(args.getFirst());
+			Sub sub = Sub.fromString(args.get(0));
 
 			if (sub != null)
 			{
 				String key = sub.getName();
 
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(prefix));
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(prefix+"."+key));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(prefix)));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(prefix+"."+key)));
 
 				if (!sub.getAlias().isEmpty())
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(prefix+"_alias", sub.getAlias().toString()));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(prefix+"_alias", sub.getAlias().toString())));
 				}
 			}
 			else
 			{
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(PREFIX+"_invalid_operation"));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(PREFIX+"_invalid_operation")));
 			}
 		}
 		else
 		{
-			mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(prefix));
+			mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(prefix)));
 
 			for (Sub entry : Sub.values())
 			{
 				String key = entry.getName();
 
-				mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(prefix+"."+key));
+				mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(prefix+"."+key)));
 
 				if (!entry.getAlias().isEmpty())
 				{
-					mc.inGameHud.getChatHud().addMessage(StringUtils.translateAsText(prefix+"_alias", entry.getAlias().toString()));
+					mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(StringUtils.translateAsText(prefix+"_alias", entry.getAlias().toString())));
 				}
 			}
 		}

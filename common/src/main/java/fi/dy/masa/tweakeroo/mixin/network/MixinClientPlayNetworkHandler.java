@@ -4,19 +4,18 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientCommonNetworkHandler;
-import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.ClientConnection;
-import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,15 +31,11 @@ import fi.dy.masa.tweakeroo.tweaks.RenderTweaks;
 import fi.dy.masa.tweakeroo.util.MiscUtils;
 
 @Mixin(ClientPlayNetworkHandler.class)
-public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkHandler
+public abstract class MixinClientPlayNetworkHandler
 {
+    @Shadow @Final private MinecraftClient client;
     @Shadow private ClientWorld world;
     @Shadow private int simulationDistance;
-
-    protected MixinClientPlayNetworkHandler(MinecraftClient client, ClientConnection connection, ClientConnectionState connectionState)
-    {
-        super(client, connection, connectionState);
-    }
 
     /**
      * Copied From Tweak Fork by Andrew54757
@@ -60,7 +55,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
             cancellable = true)
     private void tweakeroo_onHandleSetSlot(ScreenHandlerSlotUpdateS2CPacket packet, CallbackInfo ci)
     {
-        if (PlacementTweaks.shouldSkipSlotSync(packet.getSlot(), packet.getStack()))
+        if (PlacementTweaks.shouldSkipSlotSync(packet.getSlot(), packet.getItemStack()))
         {
             ci.cancel();
         }
@@ -90,14 +85,22 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         }
     }
 
-    @Inject(method = "onCustomPayload", at = @At("HEAD"))
-    private void tweakeroo_onCustomPayload(CustomPayload payload, CallbackInfo ci)
+    @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)
+    private void tweakeroo_onCustomPayload(CustomPayloadS2CPacket payload, CallbackInfo ci)
     {
-        if (payload.getId().id().equals(DataManager.CARPET_HELLO))
+        // 1.20.1 - malilibのチャンネルハンドラに回す(スプリッタ再組立込み)
+        if (((fi.dy.masa.malilib.network.ClientPacketChannelHandler) fi.dy.masa.malilib.network.ClientPacketChannelHandler.getInstance())
+                .processPacketFromServer(payload, (ClientPlayNetworkHandler) (Object) this))
+        {
+            ci.cancel();
+            return;
+        }
+
+        if (payload.getChannel().equals(DataManager.CARPET_HELLO))
         {
             DataManager.getInstance().setHasCarpetServer(true);
         }
-        else if (payload.getId().id().getNamespace().equals("servux"))
+        else if (payload.getChannel().getNamespace().equals("servux"))
         {
             DataManager.getInstance().setHasServuxServer(true);
         }
@@ -163,8 +166,8 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
     @Inject(method = "onChunkData", at = @At("RETURN"))
     private void tweakeroo_onChunkDataInject(ChunkDataS2CPacket packet, CallbackInfo ci)
     {
-        int cx = packet.getChunkX();
-        int cz = packet.getChunkZ();
+        int cx = packet.getX();
+        int cz = packet.getZ();
         RenderTweaks.loadFakeChunk(cx, cz);
 
         if (!FeatureToggle.TWEAK_SELECTIVE_BLOCKS_RENDERING.getBooleanValue())
@@ -211,26 +214,10 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
     @Inject(method = "onUnloadChunk", at = @At("RETURN"))
     private void tweakeroo_onUnloadChunkInject(UnloadChunkS2CPacket packet, CallbackInfo ci)
     {
-        int i = packet.pos().x;
-        int j = packet.pos().z;
+        int i = packet.getX();
+        int j = packet.getZ();
         RenderTweaks.unloadFakeChunk(i, j);
     }
 
-    /**
-     * Copied From Tweak Fork by Andrew54757
-     */
-    @Inject(method = "onChunkLoadDistance", at = @At("RETURN"))
-    private void tweakeroo_onChunkLoadDistanceInject(ChunkLoadDistanceS2CPacket packet, CallbackInfo ci)
-    {
-        RenderTweaks.getFakeWorld().getChunkManager().updateLoadDistance(packet.getDistance());
-    }
 
-    /**
-     * Copied From Tweak Fork by Andrew54757
-     */
-    @Inject(method = "onChunkRenderDistanceCenter", at = @At("RETURN"))
-    private void tweakeroo_onChunkRenderDistanceCenterInject(ChunkRenderDistanceCenterS2CPacket packet, CallbackInfo ci)
-    {
-        RenderTweaks.getFakeWorld().getChunkManager().setChunkMapCenter(packet.getChunkX(), packet.getChunkZ());
-    }
 }

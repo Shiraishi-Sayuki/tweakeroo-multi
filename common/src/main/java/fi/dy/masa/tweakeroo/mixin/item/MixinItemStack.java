@@ -1,8 +1,6 @@
 package fi.dy.masa.tweakeroo.mixin.item;
 
 import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -20,7 +18,6 @@ import fi.dy.masa.tweakeroo.config.FeatureToggle;
 public abstract class MixinItemStack
 {
     @Shadow public abstract Item getItem();
-    @Shadow public abstract ComponentMap getComponents();
 
     @Inject(method = "getMaxCount", at = @At("RETURN"), cancellable = true)
     public void getMaxStackSizeStackSensitive(CallbackInfoReturnable<Integer> cir)
@@ -30,7 +27,8 @@ public abstract class MixinItemStack
             block.getBlock() instanceof ShulkerBoxBlock &&
             InventoryUtils.shulkerBoxHasItems((ItemStack) (Object) this) == false)
         {
-            if (this.getComponents().getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1) < Configs.Internal.SHULKER_MAX_STACK_SIZE.getIntegerValue())
+            // 1.20.1 - コンポーネントの代わりにアイテム自体の最大スタック数を使う
+            if (this.getItem().getMaxCount() < Configs.Internal.SHULKER_MAX_STACK_SIZE.getIntegerValue())
             {
                 cir.setReturnValue(Configs.Internal.SHULKER_MAX_STACK_SIZE.getIntegerValue());
             }

@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.component.type.AttributeModifierSlot;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -404,7 +404,7 @@ public class InventoryUtils
             ItemPickerTest test;
 
             // Ignore the MACE weapon when equipped.  Do not swap.
-            if (player.getMainHandStack().isOf(Items.MACE))
+            if (false)
             {
                 return;
             }
@@ -432,11 +432,6 @@ public class InventoryUtils
     {
         boolean isWeapon = EquipmentUtils.isAnyWeapon(testedStack);
 
-        if (testedStack.isOf(Items.MACE))
-        {
-            return false;
-        }
-
         if (previousWeapon.isEmpty() && isWeapon)
         {
             return true;
@@ -452,7 +447,7 @@ public class InventoryUtils
             }
 
             // Ignore the Mace by default
-            if (!mapping || testedStack.isOf(Items.MACE))
+            if (!mapping)
             {
                 return false;
             }
@@ -493,7 +488,8 @@ public class InventoryUtils
 
     private static double getBaseAttackDamage(ItemStack stack)
     {
-        Pair<Double, Double> pair = EquipmentUtils.getDamageAndSpeedAttributes(stack);
+        var pairNM = EquipmentUtils.getDamageAndSpeedAttributes(stack);
+        Pair<Double, Double> pair = org.apache.commons.lang3.tuple.Pair.of(pairNM.getLeft(), pairNM.getRight());
 
         if (pair.getLeft() > 0)
         {
@@ -767,7 +763,7 @@ public class InventoryUtils
             case RARE -> { return 3; }
             case UNCOMMON -> { return 2; }
             case COMMON -> { return 1; }
-            case null -> { return -1; }
+            
             default -> { return 0; }
         }
     }
@@ -828,10 +824,8 @@ public class InventoryUtils
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.BANE_OF_ARTHROPODS);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.POWER);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.IMPALING);
-        count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.DENSITY);
 
         // Support
-        count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.SWEEPING_EDGE);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.FIRE_ASPECT);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.PUNCH);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.INFINITY);
@@ -842,7 +836,6 @@ public class InventoryUtils
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.RIPTIDE);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.LOYALTY);
         count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.CHANNELING);
-        count += EquipmentUtils.hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.BREACH);
 
         return count >= 0;
     }
@@ -1124,11 +1117,11 @@ public class InventoryUtils
             int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
                 if (!finalFilter.test(testedStack)) return false;
                 if (!finalFilter.test(previousBestMatch)) return true;
-                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) < getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
+                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, EquipmentSlot.CHEST) < getArmorAndArmorToughnessValue(testedStack, 1, EquipmentSlot.CHEST))
                 {
                     return true;
                 }
-                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) > getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
+                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, EquipmentSlot.CHEST) > getArmorAndArmorToughnessValue(testedStack, 1, EquipmentSlot.CHEST))
                 {
                     return false;
                 }
@@ -1142,30 +1135,26 @@ public class InventoryUtils
         }
     }
 
-    private static double getArmorAndArmorToughnessValue(ItemStack stack, double base, AttributeModifierSlot slot)
+    private static double getArmorAndArmorToughnessValue(ItemStack stack, double base, EquipmentSlot slot)
     {
+        // 1.20.1 - 属性はMultimapで取得する(AttributeModifierSlot/applyAttributeModifierは1.20.5+)
         final double[] total = {base};
 
-        stack.applyAttributeModifier(slot, (entry, modifier) -> {
-            if (entry.getKey().orElseThrow() == EntityAttributes.GENERIC_ARMOR
-                || entry.getKey().orElseThrow() == EntityAttributes.GENERIC_ARMOR_TOUGHNESS)
+        for (var entry : stack.getAttributeModifiers(slot).entries())
+        {
+            if (entry.getKey() == net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR ||
+                entry.getKey() == net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR_TOUGHNESS)
             {
-                switch (modifier.operation())
+                net.minecraft.entity.attribute.EntityAttributeModifier modifier = entry.getValue();
+
+                switch (modifier.getOperation())
                 {
-                    case ADD_VALUE:
-                        total[0] += modifier.value();
-                        break;
-                    case ADD_MULTIPLIED_BASE:
-                        total[0] += modifier.value() * base;
-                        break;
-                    case ADD_MULTIPLIED_TOTAL:
-                        total[0] += modifier.value() * total[0];
-                        break;
-                    default:
-                        throw new MatchException(null, null);
+                    case ADDITION -> total[0] += modifier.getValue();
+                    case MULTIPLY_BASE -> total[0] += modifier.getValue() * base;
+                    case MULTIPLY_TOTAL -> total[0] += modifier.getValue() * total[0];
                 }
             }
-        });
+        }
 
         return total[0];
     }
@@ -1510,9 +1499,9 @@ public class InventoryUtils
             return;
         }
 
-        double reach = mc.player.getBlockInteractionRange();
+        double reach = mc.interactionManager != null ? mc.interactionManager.getReachDistance() : 4.5d;
         boolean isCreative = player.isCreative();
-        HitResult trace = player.raycast(reach, mc.getRenderTickCounter().getTickDelta(false), false);
+        HitResult trace = player.raycast(reach, mc.getTickDelta(), false);
 
         if (trace != null && trace.getType() == HitResult.Type.BLOCK)
         {
@@ -1555,4 +1544,40 @@ public class InventoryUtils
             }
         }
     }
+    // 文字列("minecraft:item{NBT}")からItemStackを生成する
+    public static ItemStack getItemStackFromString(String str)
+    {
+        if (str == null || str.isEmpty()) { return ItemStack.EMPTY; }
+
+        try
+        {
+            String nbtPart = null;
+            int brace = str.indexOf('{');
+
+            if (brace >= 0)
+            {
+                nbtPart = str.substring(brace);
+                str = str.substring(0, brace);
+            }
+
+            net.minecraft.util.Identifier id = new net.minecraft.util.Identifier(str.trim());
+            net.minecraft.item.Item item = net.minecraft.registry.Registries.ITEM.get(id);
+
+            if (item == net.minecraft.item.Items.AIR) { return ItemStack.EMPTY; }
+
+            ItemStack stack = new ItemStack(item);
+
+            if (nbtPart != null)
+            {
+                stack.setNbt(net.minecraft.nbt.StringNbtReader.parse(nbtPart));
+            }
+
+            return stack;
+        }
+        catch (Exception e)
+        {
+            return ItemStack.EMPTY;
+        }
+    }
+
 }

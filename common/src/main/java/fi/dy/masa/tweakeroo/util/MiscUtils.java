@@ -20,13 +20,10 @@ import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
-import net.minecraft.client.gui.screen.world.CustomizeFlatLevelScreen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.world.GeneratorOptionsHolder;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
@@ -68,7 +65,6 @@ import fi.dy.masa.tweakeroo.config.Hotkeys;
 import fi.dy.masa.tweakeroo.mixin.block.IMixinCommandBlockExecutor;
 import fi.dy.masa.tweakeroo.mixin.item.IMixinAxeItem;
 import fi.dy.masa.tweakeroo.mixin.item.IMixinShovelItem;
-import fi.dy.masa.tweakeroo.mixin.screen.IMixinCustomizeFlatLevelScreen;
 import fi.dy.masa.tweakeroo.mixin.world.IMixinClientWorld;
 import fi.dy.masa.tweakeroo.renderer.RenderUtils;
 import fi.dy.masa.tweakeroo.tweaks.MiscTweaks;
@@ -541,7 +537,7 @@ public class MiscUtils
             return true;
         }
 
-        Map<MapIdComponent, MapState> data = ((IMixinClientWorld) mc.world).tweakeroo_getMapStates();
+        Map<String, MapState> data = ((IMixinClientWorld) mc.world).tweakeroo_getMapStates();
         String worldName = StringUtils.getWorldOrServerName();
 
         if (worldName == null)
@@ -562,9 +558,9 @@ public class MiscUtils
         {
             int count = 0;
 
-            for (Map.Entry<MapIdComponent, MapState> entry : data.entrySet())
+            for (Map.Entry<String, MapState> entry : data.entrySet())
             {
-                Path file = dir.resolve(entry.getKey().asString() + ".png");
+                Path file = dir.resolve(entry.getKey() + ".png");
                 writeMapAsImage(file, entry.getValue());
                 ++count;
             }
@@ -613,93 +609,10 @@ public class MiscUtils
 
     public static boolean hasCustomMaxStackSize(ItemStack stack)
     {
-        int defaultStackSize = stack.getDefaultComponents().getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
-        int currentStackSize = stack.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
-        return defaultStackSize != currentStackSize;
-    }
-
-    public static boolean registerPresetFromString(CustomizeFlatLevelScreen screen, String str)
-    {
-        Matcher matcher = MiscUtils.PATTERN_WORLD_PRESET.matcher(str);
-
-        if (matcher.matches())
-        {
-            // TODO --> I added some code here, and added the IMixinCustomizeFlatLevelScreen
-            GeneratorOptionsHolder generatorOptionsHolder = ((IMixinCustomizeFlatLevelScreen) screen).tweakeroo_getCreateWorldParent().getWorldCreator().getGeneratorOptionsHolder();
-            DynamicRegistryManager.Immutable registryManager = generatorOptionsHolder.getCombinedRegistryManager();
-            FeatureSet featureSet = generatorOptionsHolder.dataConfiguration().enabledFeatures();
-            RegistryEntryLookup<Biome> biomeLookup = registryManager.get(RegistryKeys.BIOME).getReadOnlyWrapper();
-            RegistryEntryLookup<StructureSet> structureLookup = registryManager.get(RegistryKeys.STRUCTURE_SET).getReadOnlyWrapper();;
-            RegistryEntryLookup<PlacedFeature> featuresLookup = registryManager.get(RegistryKeys.PLACED_FEATURE).getReadOnlyWrapper();;
-            RegistryEntryLookup<Block> blockLookup = registryManager.get(RegistryKeys.BLOCK).getReadOnlyWrapper();
-            FlatChunkGeneratorConfig defaultConfig = FlatChunkGeneratorConfig.getDefaultConfig(biomeLookup, structureLookup, featuresLookup);
-            FlatChunkGeneratorConfig currentConfig = screen.getConfig();
-            RegistryEntry.Reference<Biome> referenceEntry = biomeLookup.getOrThrow(BiomeKeys.PLAINS);
-            RegistryEntry.Reference<Biome> biomeEntry = referenceEntry;
-
-            String name = matcher.group("name");
-            String blocksString = matcher.group("blocks");
-            String biomeName = matcher.group("biome");
-            // TODO add back the features
-            String iconItemName = matcher.group("icon");
-
-            try
-            {
-                Optional<RegistryKey<Biome>> optBiome = Optional.ofNullable(Identifier.tryParse(biomeName)).map((biomeId) ->
-                                                                                                                        RegistryKey.of(RegistryKeys.BIOME, biomeId));
-
-                biomeEntry = optBiome.flatMap(biomeLookup::getOptional).orElse(referenceEntry);
-            }
-            catch (Exception ignore) {}
-
-            if (biomeEntry == null)
-            {
-                Tweakeroo.LOGGER.error("Invalid biome while parsing flat world string: '{}'", biomeName);
-                return false;
-            }
-
-            Item item = null;
-
-            try
-            {
-                Optional<RegistryEntry.Reference<Item>> opt = Registries.ITEM.getEntry(Identifier.of(iconItemName));
-                if (opt.isPresent())
-                {
-                    item = opt.get().value();
-                }
-            }
-            catch (Exception ignore) {}
-
-            if (item == null)
-            {
-                Tweakeroo.LOGGER.error("Invalid item for icon while parsing flat world string: '{}'", iconItemName);
-                return false;
-            }
-
-            List<FlatChunkGeneratorLayer> layers = MiscTweaks.parseBlockString(blocksString);
-
-            if (layers == null)
-            {
-                Tweakeroo.LOGGER.error("Failed to get the layers for the flat world preset");
-                return false;
-            }
-
-            FlatChunkGeneratorConfig newConfig = defaultConfig.with(layers, defaultConfig.getStructureOverrides(), biomeEntry);
-
-            //new PresetsScreen.SuperflatPresetsListWidget.SuperflatPresetEntry(null);
-            //addPreset(Text.translatable(name), item, biome, ImmutableSet.of(), false, false, layers);
-
-            screen.setConfig(newConfig);
-
-            return true;
-        }
-        else
-        {
-            Tweakeroo.LOGGER.error("Flat world preset string did not match the regex");
-        }
-
+        // 1.20.1 - コンポーネント上書きは無い
         return false;
     }
+
 
 	public static void toggleGammaOverrideWithMessage()
 	{

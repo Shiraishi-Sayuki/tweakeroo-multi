@@ -9,7 +9,7 @@ import net.minecraft.item.*;
 import net.minecraft.text.TextContent;
 import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.collection.DefaultedList;
-import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.tweakeroo.util.InventoryUtils;
 import fi.dy.masa.tweakeroo.Tweakeroo;
 
 public class CreativeExtraItems
@@ -65,7 +65,8 @@ public class CreativeExtraItems
 
             if (stack != null && stack.isEmpty() == false)
             {
-                if (stack.getComponents().isEmpty() == false)
+                // 1.20.1 - NBTの有無で判定
+                if (stack.hasNbt())
                 {
                     ADDED_ITEMS.put(group, stack);
                 }

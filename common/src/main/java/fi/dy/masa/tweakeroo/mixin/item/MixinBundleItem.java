@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import net.minecraft.item.BundleItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipData;
+import net.minecraft.client.item.TooltipData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

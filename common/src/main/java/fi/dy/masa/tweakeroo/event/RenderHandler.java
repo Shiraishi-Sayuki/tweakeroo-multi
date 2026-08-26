@@ -7,7 +7,7 @@ import org.joml.Matrix4f;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.component.DataComponentTypes;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EnderChestInventory;
@@ -119,7 +119,8 @@ public class RenderHandler implements IRenderer
                 fi.dy.masa.malilib.render.RenderUtils.renderMapPreview(stack, x, y, Configs.Generic.MAP_PREVIEW_SIZE.getIntegerValue(), false);
             }
         }
-        else if (stack.getComponents().contains(DataComponentTypes.CONTAINER) && InventoryUtils.shulkerBoxHasItems(stack))
+        // 1.20.1 - コンテナ内容はNBT
+        else if (InventoryUtils.shulkerBoxHasItems(stack))
         {
             if (FeatureToggle.TWEAK_SHULKERBOX_DISPLAY.getBooleanValue() &&
                 (Configs.Generic.SHULKER_DISPLAY_REQUIRE_SHIFT.getBooleanValue() == false || GuiBase.isShiftDown()))
@@ -163,40 +164,28 @@ public class RenderHandler implements IRenderer
                         inv = player.getEnderChestInventory();
                     }
 
-                    if (inv != null)
-                    {
-                        NbtList list = inv.toNbtList(world.getRegistryManager());
-                        NbtCompound nbt = new NbtCompound();
-
-                        nbt.put(NbtKeys.ENDER_ITEMS, list);
-                        fi.dy.masa.malilib.render.RenderUtils.renderNbtItemsPreview(stack, nbt, x, y, false, drawContext);
-                    }
+                    // FIXME - malilib 1.20.1にはrenderNbtItemsPreviewが無い(1.21新GUI向け)。ポートしたら戻す
                 }
             }
         }
-        else if (stack.getComponents().contains(DataComponentTypes.BUNDLE_CONTENTS) && InventoryUtils.bundleHasItems(stack))
-        {
-            if (FeatureToggle.TWEAK_BUNDLE_DISPLAY.getBooleanValue() &&
-                (Configs.Generic.BUNDLE_DISPLAY_REQUIRE_SHIFT.getBooleanValue() == false || GuiBase.isShiftDown()))
-            {
-                fi.dy.masa.malilib.render.RenderUtils.renderBundlePreview(stack, x, y, Configs.Generic.BUNDLE_DISPLAY_ROW_WIDTH.getIntegerValue(), Configs.Generic.BUNDLE_DISPLAY_BACKGROUND_COLOR.getBooleanValue(), drawContext);
-            }
-        }
+        // FIXME - malilib 1.20.1にはrenderBundlePreviewが無い。ポートしたら復活させる
+
     }
 
     @Override
-    public void onRenderWorldLast(Matrix4f posMatrix, Matrix4f projMatrix)
+    public void onRenderWorldLast(MatrixStack matrixStack, Matrix4f projMatrix)
     {
         MinecraftClient mc = MinecraftClient.getInstance();
 
         if (mc.player != null)
         {
-            RenderTweaks.render(posMatrix, projMatrix, mc.getProfiler());
-            this.renderOverlays(posMatrix, mc);
+            // 1.20.1 - モデルビューはMatrixStackなのでpeekでJOML行列を取り出す
+            RenderTweaks.render(matrixStack.peek().getPositionMatrix(), projMatrix, mc.getProfiler());
+            this.renderOverlays(matrixStack, mc);
         }
     }
 
-    private void renderOverlays(Matrix4f posMatrix, MinecraftClient mc)
+    private void renderOverlays(MatrixStack matrixStack, MinecraftClient mc)
     {
         Entity entity = mc.getCameraEntity();
 
@@ -225,7 +214,7 @@ public class RenderHandler implements IRenderer
                     hitResult.getSide(),
                     hitResult.getPos(),
                     color,
-                    posMatrix,
+                    matrixStack,
                     mc);
 
             RenderSystem.enableDepthTest();

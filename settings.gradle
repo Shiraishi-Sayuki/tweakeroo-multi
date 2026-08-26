@@ -21,4 +21,4 @@ pluginManagement {
 rootProject.name = 'tweakeroo-multiloader'
 include('common')
 include('fabric')
-include('neoforge')
+include('forge')

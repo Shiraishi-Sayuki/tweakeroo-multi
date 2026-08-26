@@ -250,11 +250,11 @@ public class MiscTweaks
     private static boolean potionWarningShouldInclude(StatusEffectInstance effect)
     {
         return effect.isAmbient() == false &&
-               (effect.getEffectType().value().isBeneficial() ||
+               (effect.getEffectType().isBeneficial() ||
                Configs.Generic.POTION_WARNING_BENEFICIAL_ONLY.getBooleanValue() == false) &&
                effect.getDuration() <= Configs.Generic.POTION_WARNING_THRESHOLD.getIntegerValue() &&
                effect.getDuration() >= 0 &&
-               POTION_RESTRICTION.isAllowed(effect.getEffectType().value());
+               POTION_RESTRICTION.isAllowed(effect.getEffectType());
     }
 
     public static @NotNull List<FlatChunkGeneratorLayer> parseBlockString(String blockString)

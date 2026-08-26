@@ -8,13 +8,13 @@ import org.joml.Matrix4fStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.CrafterBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.*;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
@@ -177,16 +177,10 @@ public class RenderUtils
                 yInv = Math.min(yInv, yCenter - 92);
             }
 
-            if (be != null && type == InventoryOverlay.InventoryRenderType.CRAFTER)
+            // 1.20.1にCrafterは存在しない、NBT経由のみ残す
+            if (be != null && context.nbt() != null && type == InventoryOverlay.InventoryRenderType.CRAFTER)
             {
-                if (be instanceof CrafterBlockEntity cbe)
-                {
-                    lockedSlots = BlockUtils.getDisabledSlots(cbe);
-                }
-                else if (context.nbt() != null)
-                {
-                    lockedSlots = NbtBlockUtils.getDisabledSlotsFromNbt(context.nbt());
-                }
+                lockedSlots = NbtBlockUtils.getDisabledSlotsFromNbt(context.nbt());
             }
 
             //Tweakeroo.logger.warn("renderInventoryOverlay: type [{}] // Nbt Type [{}] // inv.isEmpty({})", type.toString(), context.nbt() != null ? InventoryOverlay.getInventoryType(context.nbt()) : "INVALID", inv.isEmpty());
@@ -199,7 +193,8 @@ public class RenderUtils
             if (isHorse)
             {
                 Inventory horseInv = new SimpleInventory(2);
-                ItemStack horseArmor = (((AbstractHorseEntity) entityLivingBase).getBodyArmor());
+                // 1.20.1にボディアーマーは無い
+                ItemStack horseArmor = ItemStack.EMPTY;
                 horseInv.setStack(0, horseArmor != null && !horseArmor.isEmpty() ? horseArmor : ItemStack.EMPTY);
                 horseInv.setStack(1, inv.getStack(0));
 
@@ -239,7 +234,8 @@ public class RenderUtils
             xInv = xCenter + 2;
             yInv = Math.min(yInv, yCenter - 92);
             Inventory wolfInv = new SimpleInventory(2);
-            ItemStack wolfArmor = ((WolfEntity) entityLivingBase).getBodyArmor();
+            // 1.20.1に狼用アーマーは無い
+            ItemStack wolfArmor = ItemStack.EMPTY;
             wolfInv.setStack(0, wolfArmor != null && !wolfArmor.isEmpty() ? wolfArmor : ItemStack.EMPTY);
             InventoryOverlay.renderInventoryBackground(type, xInv, yInv, 1, 2, mc);
             InventoryOverlay.renderWolfArmorBackgroundSlots(wolfInv, xInv + props.slotOffsetX, yInv + props.slotOffsetY, drawContext);
@@ -311,25 +307,22 @@ public class RenderUtils
 
             if (head.isEmpty() == false)
             {
-                ItemEnchantmentsComponent enchants = head.getEnchantments();
+                // 1.20.1 - EnchantmentHelper.getはMap<Enchantment,Integer>を返す
+                // 1.20.1 - getはObject2IntMap<Enchantment>を返す
+                var enchants = (it.unimi.dsi.fastutil.objects.Object2IntMap<net.minecraft.enchantment.Enchantment>) net.minecraft.enchantment.EnchantmentHelper.get(head);
                 float fog = (originalFog > 1.0f) ? 3.3f : 1.3f;
                 int resp = 0;
                 int aqua = 0;
 
-                if (enchants.equals(ItemEnchantmentsComponent.DEFAULT) == false)
+                for (var entry : enchants.object2IntEntrySet())
                 {
-                    Set<RegistryEntry<Enchantment>> enchantList = enchants.getEnchantments();
-
-                    for (RegistryEntry<Enchantment> entry : enchantList)
+                    if (entry.getKey() == net.minecraft.enchantment.Enchantments.AQUA_AFFINITY)
                     {
-                        if (entry.matchesKey(Enchantments.AQUA_AFFINITY))
-                        {
-                            aqua = enchants.getLevel(entry);
-                        }
-                        if (entry.matchesKey(Enchantments.RESPIRATION))
-                        {
-                            resp = enchants.getLevel(entry);
-                        }
+                        aqua = entry.getIntValue();
+                    }
+                    if (entry.getKey() == net.minecraft.enchantment.Enchantments.RESPIRATION)
+                    {
+                        resp = entry.getIntValue();
                     }
                 }
 
@@ -363,17 +356,17 @@ public class RenderUtils
         float yaw = camera.getYaw();
 
         RenderSystem.enableBlend();
-        Matrix4fStack matrix4fStack = RenderSystem.getModelViewStack();
-        matrix4fStack.pushMatrix();
-        matrix4fStack.mul(drawContext.getMatrices().peek().getPositionMatrix());
-        matrix4fStack.translate(width, height, 0.0F);
-        matrix4fStack.rotateX(fi.dy.masa.malilib.render.RenderUtils.matrix4fRotateFix(-pitch));
-        matrix4fStack.rotateY(fi.dy.masa.malilib.render.RenderUtils.matrix4fRotateFix(yaw));
-        matrix4fStack.scale(-1.0F, -1.0F, -1.0F);
+        MatrixStack matrixStack = drawContext.getMatrices();
+        matrixStack.push();
+        matrixStack.multiplyPositionMatrix(drawContext.getMatrices().peek().getPositionMatrix());
+        matrixStack.translate(width, height, 0.0F);
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-pitch));
+        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yaw));
+        matrixStack.scale(-1.0F, -1.0F, -1.0F);
 
         RenderSystem.applyModelViewMatrix();
         RenderSystem.renderCrosshair(10);
-        matrix4fStack.popMatrix();
+        matrixStack.pop();
         RenderSystem.applyModelViewMatrix();
         RenderSystem.disableBlend();
     }
@@ -569,17 +562,15 @@ public class RenderUtils
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        BuiltBuffer meshData;
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
         startDrawingLines();
         drawBlockBoundingBoxOutlinesBatchedLines(pos, color, expand, buffer, mc);
 
         try
         {
-            meshData = buffer.end();
-            BufferRenderer.drawWithGlobalProgram(meshData);
-            meshData.close();
+            tessellator.draw();
         }
         catch (Exception ignored) { }
     }
@@ -649,8 +640,8 @@ public class RenderUtils
         RenderSystem.lineWidth(lineWidth);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        BuiltBuffer meshData;
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
         startDrawingLines();
 
@@ -695,9 +686,7 @@ public class RenderUtils
 
         try
         {
-            meshData = buffer.end();
-            BufferRenderer.drawWithGlobalProgram(meshData);
-            meshData.close();
+            tessellator.draw();
         }
         catch (Exception ignored) { }
     }
@@ -725,8 +714,8 @@ public class RenderUtils
     private static void drawBoundingBoxEdges(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, Color4f colorX, Color4f colorY, Color4f colorZ)
     {
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        BuiltBuffer meshData;
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
         startDrawingLines();
 
@@ -736,9 +725,7 @@ public class RenderUtils
 
         try
         {
-            meshData = buffer.end();
-            BufferRenderer.drawWithGlobalProgram(meshData);
-            meshData.close();
+            tessellator.draw();
         }
         catch (Exception ignored) { }
     }
@@ -794,16 +781,14 @@ public class RenderUtils
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        BuiltBuffer meshData;
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
         renderAreaSidesBatched(pos1, pos2, color, 0.002, buffer, mc);
 
         try
         {
-            meshData = buffer.end();
-            BufferRenderer.drawWithGlobalProgram(meshData);
-            meshData.close();
+            tessellator.draw();
         }
         catch (Exception ignored) { }
 
@@ -866,8 +851,8 @@ public class RenderUtils
         RenderSystem.lineWidth(lineWidth);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        BuiltBuffer meshData;
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
         startDrawingLines();
 
@@ -984,9 +969,7 @@ public class RenderUtils
 
         try
         {
-            meshData = buffer.end();
-            BufferRenderer.drawWithGlobalProgram(meshData);
-            meshData.close();
+            tessellator.draw();
         }
         catch (Exception ignored) { }
     }

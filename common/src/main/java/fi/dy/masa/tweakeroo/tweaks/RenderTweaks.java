@@ -15,6 +15,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonHandler;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.Text;
@@ -29,7 +30,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import fi.dy.masa.malilib.render.RenderUtils;
+import fi.dy.masa.tweakeroo.renderer.RenderUtils;
 import fi.dy.masa.malilib.util.Color4f;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.restrictions.UsageRestriction;
@@ -137,9 +138,10 @@ public class RenderTweaks
             }
 
             profiler.push(Reference.MOD_ID+"_render_tweaks");
-            Matrix4fStack globalStack = RenderSystem.getModelViewStack();
+            // 1.20.1 - モデルビューはMatrixStack
+            MatrixStack globalStack = RenderSystem.getModelViewStack();
 
-            globalStack.pushMatrix();
+            globalStack.push();
             //matrices.push();
             fi.dy.masa.malilib.render.RenderUtils.color(1f, 1f, 1f, 1f);
             fi.dy.masa.malilib.render.RenderUtils.setupBlend();
@@ -168,7 +170,7 @@ public class RenderTweaks
             RenderSystem.polygonOffset(0f, 0f);
             RenderSystem.disablePolygonOffset();
             //matrices.pop();
-            globalStack.popMatrix();
+            globalStack.pop();
             // RenderSystem.enableTexture();
             RenderSystem.depthMask(true);
             profiler.pop();

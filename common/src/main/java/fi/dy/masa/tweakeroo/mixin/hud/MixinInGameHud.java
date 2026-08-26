@@ -4,9 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.hud.PlayerListHud;
-import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,7 +25,7 @@ public abstract class MixinInGameHud
 
     @Inject(method = "renderCrosshair", at = @At(value = "INVOKE",
                 target = "Lnet/minecraft/client/gui/hud/DebugHud;shouldShowDebugHud()Z", ordinal = 0), cancellable = true)
-    private void overrideCursorRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci)
+    private void overrideCursorRender(DrawContext context, CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_F3_CURSOR.getBooleanValue())
         {
@@ -36,16 +34,17 @@ public abstract class MixinInGameHud
         }
     }
 
-    @Inject(method = "renderPlayerList",
+    // 1.20.1ではrenderPlayerListメソッドが無く、render()内にインライン展開されている
+    @Inject(method = "render",
             at = @At(value = "INVOKE",
                      target = "Lnet/minecraft/client/gui/hud/PlayerListHud;setVisible(Z)V",
                      ordinal = 1, shift = At.Shift.AFTER))
-    private void alwaysRenderPlayerList(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci)
+    private void alwaysRenderPlayerList(DrawContext context, float tickDelta, CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_PLAYER_LIST_ALWAYS_ON.getBooleanValue())
         {
             Scoreboard scoreboard = this.client.world.getScoreboard();
-            ScoreboardObjective objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.LIST);
+            ScoreboardObjective objective = scoreboard.getObjectiveForSlot(0);
 
             this.playerListHud.setVisible(true);
             this.playerListHud.render(context, context.getScaledWindowWidth(), scoreboard, objective);

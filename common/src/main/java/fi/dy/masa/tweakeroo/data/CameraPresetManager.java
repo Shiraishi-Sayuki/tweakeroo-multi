@@ -558,7 +558,7 @@ public class CameraPresetManager
 
 		for (CameraPreset entry : sorted)
 		{
-			CameraPreset.CODEC.encodeStart(JsonOps.INSTANCE, entry).resultOrPartial().ifPresent(arr::add);
+			CameraPreset.CODEC.encodeStart(JsonOps.INSTANCE, entry).result().ifPresent(arr::add);
 		}
 
 		if (arr.size() > 0)
@@ -590,7 +590,7 @@ public class CameraPresetManager
 
 					for (int i = 0; i < arr.size(); i++)
 					{
-						CameraPreset entry = CameraPreset.CODEC.parse(JsonOps.INSTANCE, arr.get(i)).getOrThrow();
+						CameraPreset entry = CameraPreset.CODEC.parse(JsonOps.INSTANCE, arr.get(i)).result().orElse(null);
 
 						if (entry != null)
 						{

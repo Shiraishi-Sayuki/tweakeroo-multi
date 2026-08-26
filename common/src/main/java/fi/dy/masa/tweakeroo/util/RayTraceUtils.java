@@ -8,6 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -20,7 +21,8 @@ public class RayTraceUtils
     public static HitResult getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids)
     {
         //double reach = 5.0d;
-        double reach = entityIn instanceof PlayerEntity pe ? pe.getBlockInteractionRange() + 1.0d : 5.0d;
+        // 1.20.1 - interactionManager経由
+        double reach = entityIn instanceof PlayerEntity pe && MinecraftClient.getInstance().interactionManager != null ? MinecraftClient.getInstance().interactionManager.getReachDistance() + 1.0d : 5.0d;
         return getRayTraceFromEntity(worldIn, entityIn, useLiquids, reach);
     }
 

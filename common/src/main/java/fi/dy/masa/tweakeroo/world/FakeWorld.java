@@ -9,12 +9,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.map.MapState;
-import net.minecraft.recipe.BrewingRecipeRegistry;
 import net.minecraft.recipe.RecipeManager;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryKey;
@@ -40,7 +38,6 @@ import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.event.GameEvent.Emitter;
 import net.minecraft.world.tick.QueryableTickScheduler;
-import net.minecraft.world.tick.TickManager;
 
 import fi.dy.masa.tweakeroo.Reference;
 import fi.dy.masa.tweakeroo.tweaks.RenderTweaks;
@@ -50,7 +47,7 @@ import fi.dy.masa.tweakeroo.tweaks.RenderTweaks;
  */
 public class FakeWorld extends World
 {
-    private static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, Identifier.of(Reference.MOD_ID, "selective_world"));
+    private static final RegistryKey<World> REGISTRY_KEY = RegistryKey.of(RegistryKeys.WORLD, new Identifier(Reference.MOD_ID, "selective_world"));
     private static final ClientWorld.Properties LEVEL_INFO = new ClientWorld.Properties(Difficulty.PEACEFUL, false, true);
     private static final RegistryEntry<DimensionType> DIMENSION_TYPE = RenderTweaks.getDynamicRegistryManager().createRegistryLookup().getOrThrow(RegistryKeys.DIMENSION_TYPE).getOrThrow(DimensionTypes.OVERWORLD);
 
@@ -122,7 +119,7 @@ public class FakeWorld extends World
     }
 
     @Override
-    public void emitGameEvent(RegistryEntry<GameEvent> event, Vec3d emitterPos, Emitter emitter)
+    public void emitGameEvent(GameEvent event, Vec3d emitterPos, Emitter emitter)
     {
         // TODO Auto-generated method stub
     }
@@ -269,11 +266,7 @@ public class FakeWorld extends World
         return this.registryManager;
     }
 
-    @Override
-    public BrewingRecipeRegistry getBrewingRecipeRegistry()
-    {
-        return null;
-    }
+
 
     @Override
     public QueryableTickScheduler<Block> getBlockTickScheduler()
@@ -347,27 +340,23 @@ public class FakeWorld extends World
     }
 
     @Override
-    public TickManager getTickManager()
+    public MapState getMapState(String id)
     {
+
         return null;
     }
 
     @Override
-    public @Nullable MapState getMapState(MapIdComponent id)
+    public void putMapState(String id, MapState state)
     {
-        return null;
-    }
 
-    @Override
-    public void putMapState(MapIdComponent id, MapState state)
-    {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public MapIdComponent increaseAndGetMapId()
+    public int getNextMapId()
     {
-        return null;
+        return 0;
     }
 
     @Override

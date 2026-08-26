@@ -1,10 +1,10 @@
 modLoader = "javafml"
-loaderVersion = "[4,)"
+loaderVersion = "[46,)"
 license = "LGPLv3"
 
 [[mods]]
 modId = "tweakeroo"
-version = "${mod_version}"
+version = "${version}"
 displayName = "Tweakeroo"
 displayURL = "https://github.com/maruohon/tweakeroo"
 logoFile = "assets/tweakeroo/icon.png"
@@ -14,26 +14,23 @@ description = '''
 Adds a bunch of configurable client-side tweaks.
 '''
 
-[[mixins]]
-config = "mixins.tweakeroo.json"
-
 [[dependencies.tweakeroo]]
-modId = "neoforge"
+modId = "forge"
 mandatory = true
-versionRange = "[21.0.0,)"
+versionRange = "[46,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.tweakeroo]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.21,1.22)"
+versionRange = "[1.20,1.21)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.tweakeroo]]
 modId = "malilib"
 mandatory = true
-versionRange = "[0.21,)"
+versionRange = "[0.20.01,)"
 ordering = "AFTER"
 side = "CLIENT"

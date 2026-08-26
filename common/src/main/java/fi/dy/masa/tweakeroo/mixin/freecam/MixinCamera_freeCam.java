@@ -1,6 +1,6 @@
 package fi.dy.masa.tweakeroo.mixin.freecam;
 
-import net.minecraft.block.enums.CameraSubmersionType;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.Camera;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

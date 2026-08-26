@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.enums.Orientation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -222,10 +221,10 @@ public class PlacementTweaks
         {
             ClientPlayerEntity player = mc.player;
             World world = player.getEntityWorld();
-            final double reach = mc.player.getBlockInteractionRange();
+            final double reach = mc.interactionManager != null ? mc.interactionManager.getReachDistance() : 4.5d;
             final int maxCount = Configs.Generic.FAST_BLOCK_PLACEMENT_COUNT.getIntegerValue();
 
-            mc.crosshairTarget = player.raycast(reach, mc.getRenderTickCounter().getTickDelta(false), false);
+            mc.crosshairTarget = player.raycast(reach, mc.getTickDelta(), false);
 
             for (int i = 0; i < maxCount; ++i)
             {
@@ -286,7 +285,7 @@ public class PlacementTweaks
                     if (result == ActionResult.SUCCESS)
                     {
                         posLast = posNew;
-                        mc.crosshairTarget = player.raycast(reach, mc.getRenderTickCounter().getTickDelta(false), false);
+                        mc.crosshairTarget = player.raycast(reach, mc.getTickDelta(), false);
                     }
                     else
                     {
@@ -450,7 +449,7 @@ public class PlacementTweaks
 
         Block itemBlock = ((BlockItem)stack.getItem()).getBlock();
         MinecraftClient mc = MinecraftClient.getInstance();
-        double reach = mc.player.getBlockInteractionRange();
+        double reach = mc.interactionManager != null ? mc.interactionManager.getReachDistance() : 4.5d;
         BlockPos.Mutable tempPos = new BlockPos.Mutable(pos.getX(),pos.getY(),pos.getZ());
 
         for (int i = 0; i < Configs.Generic.SCAFFOLD_PLACE_DISTANCE.getIntegerValue(); i++)
@@ -664,19 +663,8 @@ public class PlacementTweaks
 
                     x = posNew.getX() + relX + 2 + (protocolValue);
                 }
-                else if (handleAccurate && BlockUtils.isFacingValidForOrientation(stack, facing))
-                {
-                    int facingIndex = BlockUtils.getOrientationFacingIndex(stack, facing);
+// Orientation states are 1.21-only
 
-                    if (facingIndex > 0)
-                    {
-                        x = posNew.getX() + relX + 2 + (facingIndex * 2);
-                    }
-                    else
-                    {
-                        x = posNew.getX() + relX + 2 + (facing.getId() * 2);
-                    }
-                }
 
                 if (afterClicker)
                 {
@@ -915,33 +903,8 @@ public class PlacementTweaks
             //System.out.printf("processRightClickBlockWrapper/Direction req facing: %s, x: %.3f, pos: %s, sideIn: %s\n", facing, x, posIn, sideIn);
             hitVecIn = new Vec3d(x, hitVecIn.y, hitVecIn.z);
         }
-        else if (flexible && rotation && accurate == false &&
-                Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
-                BlockUtils.isFacingValidForOrientation(stackOriginal, facing))
-        {
-            facing = facing.getOpposite(); // go from block face to click on to the requested facing
-            //double relX = hitVecIn.x - posIn.getX();
-            //double x = posIn.getX() + relX + 2 + (facing.getId() * 2);
+// Orientation states are 1.21-only
 
-            int facingIndex = BlockUtils.getOrientationFacingIndex(stackOriginal, facing);
-            double x;
-            if (facingIndex >= 0)
-            {
-                x = posIn.getX() + 2 + (facingIndex * 2);
-            }
-            else
-            {
-                x = posIn.getX() + 2 + (facing.getId() * 2);
-            }
-
-            if (FeatureToggle.TWEAK_AFTER_CLICKER.getBooleanValue())
-            {
-                x += afterClickerClickCount * 16;
-            }
-
-            //System.out.printf("processRightClickBlockWrapper/Orientation req facing: %s, x: %.3f, pos: %s, sideIn: %s\n", facing, x, posIn, sideIn);
-            hitVecIn = new Vec3d(x, hitVecIn.y, hitVecIn.z);
-        }
 
         if (FeatureToggle.TWEAK_Y_MIRROR.getBooleanValue() && Hotkeys.PLACEMENT_Y_MIRROR.getKeybind().isKeybindHeld())
         {
