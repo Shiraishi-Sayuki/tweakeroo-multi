@@ -19,6 +19,7 @@
     "block.MixinSignBlockEntity",
     "block.MixinSlimeBlock",
     "block.MixinStructureBlockBlockEntity",
+    "entity.MixinAbstractDecorationEntity",
     "entity.MixinBatEntity",
     "entity.MixinEntity",
     "entity.MixinLivingEntity",

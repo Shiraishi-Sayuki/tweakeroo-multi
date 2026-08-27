@@ -25,7 +25,7 @@ public abstract class MixinEntityRenderDispatcher
     {
         boolean isPlayer = (entityIn instanceof PlayerEntity);
 
-        if (entityIn instanceof AbstractDecorationEntity)
+        if (entityIn instanceof IDecorationEntity)
         {
             if (!RenderTweaks.isPositionValidForRendering(((IDecorationEntity) entityIn).tweakeroo$getAttached()))
             {
