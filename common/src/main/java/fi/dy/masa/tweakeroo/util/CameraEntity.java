@@ -256,7 +256,7 @@ public class CameraEntity extends ClientPlayerEntity
                 removeCamera(mc);
             }
 
-            mc.gameRenderer.setRenderHand(! enabled);
+            mc.gameRenderer.setRenderHand(! enabled || Configs.Generic.FREE_CAMERA_SHOW_HANDS.getBooleanValue());
         }
     }
 

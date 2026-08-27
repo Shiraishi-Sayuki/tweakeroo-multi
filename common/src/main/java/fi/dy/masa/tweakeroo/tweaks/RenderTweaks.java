@@ -595,7 +595,7 @@ public class RenderTweaks
     public static void updateSelectiveAtPos(BlockPos pos)
     {
         MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.world == null)
+        if (mc.world == null || fakeWorld == null)
         {
             return;
         }
@@ -642,7 +642,7 @@ public class RenderTweaks
         MinecraftClient mc = MinecraftClient.getInstance();
         UsageRestriction.ListType listtype = (UsageRestriction.ListType) Configs.Lists.SELECTIVE_BLOCKS_LIST_TYPE.getOptionListValue();
         boolean toggle = FeatureToggle.TWEAK_SELECTIVE_BLOCKS_RENDERING.getBooleanValue();
-        if (mc.world == null)
+        if (mc.world == null || fakeWorld == null)
         {
             CACHED_LIST.clear();
             if (listtype != UsageRestriction.ListType.NONE)
@@ -891,21 +891,30 @@ public class RenderTweaks
 
     public static void loadFakeChunk(int x, int z)
     {
-        fakeWorld.getChunkManager().loadChunk(x, z);
+        if (fakeWorld != null)
+        {
+            fakeWorld.getChunkManager().loadChunk(x, z);
+        }
     }
 
     public static void setFakeBlockState(World realWorld, BlockPos pos, BlockState state, BlockEntity be)
     {
-        fakeWorld.setBlockState(pos, state, 0);
-        if (be != null)
+        if (fakeWorld != null)
         {
-            fakeWorld.addBlockEntity(be);
-            be.setWorld(realWorld);
+            fakeWorld.setBlockState(pos, state, 0);
+            if (be != null)
+            {
+                fakeWorld.addBlockEntity(be);
+                be.setWorld(realWorld);
+            }
         }
     }
 
     public static void unloadFakeChunk(int x, int z)
     {
-        fakeWorld.getChunkManager().unloadChunk(x, z);
+        if (fakeWorld != null)
+        {
+            fakeWorld.getChunkManager().unloadChunk(x, z);
+        }
     }
 }

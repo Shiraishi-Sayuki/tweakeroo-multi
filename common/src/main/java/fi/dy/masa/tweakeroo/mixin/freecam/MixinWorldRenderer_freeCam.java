@@ -39,10 +39,12 @@ public abstract class MixinWorldRenderer_freeCam
         }
     }
 
+    // 1.20.1: render() takes (MatrixStack, float, long, boolean, Camera, GameRenderer, LightmapTextureManager, Matrix4f)
+    // 1.20.1 profiler string is "compilechunks" not "compile_sections"
     @Inject(method = "render", at = @At(value = "INVOKE_STRING",
-                                        target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=compile_sections"))
-    private void postSetupTerrain(RenderTickCounter tickCounter, boolean renderBlockOutline,
-                                  Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci)
+                                        target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=compilechunks"))
+    private void postSetupTerrain(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline,
+                                  Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f projectionMatrix, CallbackInfo ci)
     {
         CameraUtils.setFreeCameraSpectator(false);
     }
