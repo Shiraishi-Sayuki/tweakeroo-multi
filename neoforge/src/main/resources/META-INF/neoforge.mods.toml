@@ -1,0 +1,40 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "LGPLv3"
+
+[[mods]]
+modId = "tweakeroo"
+version = "${mod_version}"
+displayName = "Tweakeroo"
+updateJSONURL = "https://masa.dy.fi/maven/tweakeroo/tweakeroo.json"
+displayURL = "https://www.curseforge.com/minecraft/mc-mods/tweakeroo"
+logoFile = "assets/tweakeroo/icon.png"
+authors = "masa, Shiraishi Sayuki (multiloader port)"
+description = "Adds a bunch of configurable client-side tweaks"
+accessTransformers = [
+  "META-INF/accesstransformer.cfg"
+]
+
+[[mixins]]
+config = "mixins.tweakeroo.json"
+
+[[dependencies.tweakeroo]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.2,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.tweakeroo]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.2,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.tweakeroo]]
+modId = "malilib"
+type = "required"
+versionRange = "[0.26.2,)"
+ordering = "AFTER"
+side = "CLIENT"
