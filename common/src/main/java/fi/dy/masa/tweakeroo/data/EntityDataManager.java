@@ -14,6 +14,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
+import fi.dy.masa.malilib.MaLiLibReference;
 import fi.dy.masa.malilib.config.options.ConfigBoolean;
 import fi.dy.masa.malilib.interfaces.IClientTickHandler;
 import fi.dy.masa.malilib.interfaces.IDataSyncer;
